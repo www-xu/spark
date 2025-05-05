@@ -38,6 +38,14 @@ func NewApplicationContext() *ApplicationContext {
 	}
 }
 
+func RegisterApplicationInitEventListener(listener ApplicationInitEventListener) {
+	ctx.initEventListeners = append(ctx.initEventListeners, listener)
+}
+
+func RegisterApplicationStopEventListener(listener ApplicationStopEventListener) {
+	ctx.stopEventListeners = append(ctx.stopEventListeners, listener)
+}
+
 func (ctx *ApplicationContext) beforeInit() error {
 	for _, listener := range ctx.initEventListeners {
 		err := listener.BeforeInit()
