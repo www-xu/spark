@@ -3,7 +3,6 @@ package spark
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"net/http"
 	"os"
 )
 
@@ -24,7 +23,6 @@ func init() {
 }
 
 type ApplicationContext struct {
-	server             *http.Server
 	config             *ApplicationConfig
 	initEventListeners []ApplicationInitEventListener
 	stopEventListeners []ApplicationStopEventListener
@@ -129,15 +127,12 @@ func (ctx *ApplicationContext) loadConfig() error {
 	return nil
 }
 
-func (ctx *ApplicationContext) Stop() error {
+func (ctx *ApplicationContext) Stop(callback func()) error {
 	for _, listener := range ctx.stopEventListeners {
 		listener.BeforeStop()
 	}
 
-	err := ctx.server.Close()
-	if err != nil {
-		return err
-	}
+	callback()
 
 	for _, listener := range ctx.stopEventListeners {
 		listener.AfterStop()
