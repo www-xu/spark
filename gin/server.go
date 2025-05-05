@@ -11,7 +11,7 @@ import (
 
 type Server struct {
 	config *Config
-	engine *gin.Engine
+	*gin.Engine
 }
 
 func NewServer(middleware ...gin.HandlerFunc) *Server {
@@ -20,7 +20,7 @@ func NewServer(middleware ...gin.HandlerFunc) *Server {
 	ginEngine.Use(middleware...)
 
 	return &Server{
-		engine: ginEngine,
+		Engine: ginEngine,
 	}
 }
 
@@ -37,7 +37,7 @@ func (s *Server) Run() (err error) {
 
 	server := &http.Server{
 		Addr:    s.config.Address,
-		Handler: s.engine,
+		Handler: s.Engine,
 	}
 
 	go func() {
