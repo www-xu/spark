@@ -9,8 +9,8 @@ import (
 type AppEnv string
 
 const (
-	Prod    AppEnv = "prod"
-	Dev     AppEnv = "dev"
+	Prod    AppEnv = "production"
+	Dev     AppEnv = "development"
 	Staging AppEnv = "staging"
 )
 
