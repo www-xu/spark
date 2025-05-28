@@ -19,7 +19,7 @@ require (
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/spf13/viper v1.20.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/www-xu/spark v0.0.0-20250505071320-d3dc900f196f // indirect
+	github.com/www-xu/spark v0.0.0-20250528032951-3396dc702ac1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
