@@ -26,13 +26,13 @@ func init() {
 }
 
 func (c *Component) Instantiate() error {
-	err := c.ctx.UnmarshalKey("mysql", &c.config)
+	err := c.ctx.UnmarshalKey("n8n", &c.config)
 	if err != nil {
 		return err
 	}
 
 	if c.config == nil {
-		return errors.New("mysql config isn't found")
+		return errors.New("n8n config isn't found")
 	}
 
 	c.instance = NewClient(c.config.Host, c.config.AuthHeaderKey, c.config.AuthHeaderValue)
