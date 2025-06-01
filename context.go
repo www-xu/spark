@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
+	"sync"
 )
 
 type AppEnv string
@@ -23,6 +24,8 @@ func init() {
 }
 
 type ApplicationContext struct {
+	initLock           *sync.Mutex
+	initialized        bool
 	config             *ApplicationConfig
 	initEventListeners []ApplicationInitEventListener
 	stopEventListeners []ApplicationStopEventListener
@@ -30,6 +33,7 @@ type ApplicationContext struct {
 
 func NewApplicationContext() *ApplicationContext {
 	return &ApplicationContext{
+		initLock:           &sync.Mutex{},
 		config:             &ApplicationConfig{},
 		initEventListeners: []ApplicationInitEventListener{},
 		stopEventListeners: []ApplicationStopEventListener{},
@@ -77,6 +81,13 @@ func Env() AppEnv {
 }
 
 func (ctx *ApplicationContext) Init() error {
+	ctx.initLock.Lock()
+	defer ctx.initLock.Unlock()
+
+	if ctx.initialized {
+		return nil
+	}
+
 	err := ctx.beforeInit()
 	if err != nil {
 		return err
@@ -91,6 +102,9 @@ func (ctx *ApplicationContext) Init() error {
 	if err != nil {
 		return err
 	}
+
+	ctx.initialized = true
+
 	return nil
 }
 
