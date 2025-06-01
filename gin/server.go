@@ -24,6 +24,15 @@ func NewServer(middleware ...gin.HandlerFunc) *Server {
 	}
 }
 
+func (s *Server) Init() (err error) {
+	err = spark.Init()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Server) Run() (err error) {
 	err = spark.Init()
 	if err != nil {
