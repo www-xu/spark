@@ -10,5 +10,5 @@ type Config struct {
 	MaxOpenConns int     `mapstructure:"max_open_conns"`
 	MaxIdleConns int     `mapstructure:"max_idle_conns"`
 	MaxLifetime  int     `mapstructure:"max_life_time"`
-	scheme       *string `mapstructure:"scheme"`
+	Scheme       *string `mapstructure:"scheme"`
 }

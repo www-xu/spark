@@ -48,8 +48,8 @@ func (c *Component) Instantiate() error {
 		c.config.SSLMode,
 	)
 
-	if c.config.scheme != nil {
-		dsn += fmt.Sprintf(" search_path=%s", *c.config.scheme)
+	if c.config.Scheme != nil {
+		dsn += fmt.Sprintf(" search_path=%s", *c.config.Scheme)
 	}
 
 	c.instance, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
