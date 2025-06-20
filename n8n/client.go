@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/www-xu/spark"
 	"io"
 	"net/http"
+
+	"github.com/www-xu/spark"
 )
 
 type Client struct {
@@ -56,7 +57,7 @@ func (c *Client) InvokeWorkflow(ctx context.Context, workflowId string, inputs m
 	}
 
 	if rawResponse.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf("[%d] | %s", rawResponse.Status, string(responseBody)))
+		return nil, errors.New(fmt.Sprintf("[%s] | %s", rawResponse.Status, string(responseBody)))
 	}
 
 	err = json.Unmarshal(responseBody, &response)
