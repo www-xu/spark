@@ -21,7 +21,7 @@ func NewServer(middlewares ...gin.HandlerFunc) *Server {
 	ginEngine.ContextWithFallback = true
 
 	// Add custom logger and recovery middleware
-	ginEngine.Use(middleware.Logger(), gin.Recovery())
+	ginEngine.Use(middleware.Observability(), gin.Recovery())
 	ginEngine.Use(middlewares...)
 
 	return &Server{

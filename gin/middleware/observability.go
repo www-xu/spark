@@ -14,7 +14,7 @@ import (
 
 var tracer = otel.Tracer("gin-server")
 
-func Logger() gin.HandlerFunc {
+func Observability() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		propagator := otel.GetTextMapPropagator()
@@ -40,7 +40,9 @@ func Logger() gin.HandlerFunc {
 		}
 		ctx = context.WithValue(ctx, log.RequestIdKey, requestID)
 
-		// Propagate the trace context in the response header
+		// Propagate all relevant IDs in the response headers.
+		c.Header("X-Request-ID", requestID)
+		c.Header("X-Trace-ID", traceID)
 		propagator.Inject(ctx, propagation.HeaderCarrier(c.Writer.Header()))
 		// Place the final, enriched context into the request.
 		c.Request = c.Request.WithContext(ctx)
