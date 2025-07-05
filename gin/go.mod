@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/www-xu/spark v0.0.0-20250601012705-c109e7f74014
-	github.com/www-xu/spark/log v0.0.0-20250705092556-03ad6e748ef0
+	github.com/www-xu/spark/log v0.0.0-20250705141107-8849907f6b67
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
 )
