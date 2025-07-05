@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/spf13/viper v1.20.1
-	github.com/www-xu/spark/log v0.0.0-00010101000000-000000000000
+	github.com/www-xu/spark/log v0.0.0-20250705100346-c3713401129d
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.37.0
 	go.opentelemetry.io/otel/sdk v1.37.0
