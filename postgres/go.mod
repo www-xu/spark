@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/www-xu/spark v0.0.0-20250528032951-3396dc702ac1
-	github.com/www-xu/spark/log v0.0.0-20250705092556-03ad6e748ef0
+	github.com/www-xu/spark/log v0.0.0-20250705142410-605db6152998
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.30.0
 )
@@ -32,9 +32,9 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

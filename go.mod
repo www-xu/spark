@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/spf13/viper v1.20.1
-	github.com/www-xu/spark/log v0.0.0-20250705141107-8849907f6b67
+	github.com/www-xu/spark/log v0.0.0-20250705142410-605db6152998
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.37.0
 	go.opentelemetry.io/otel/sdk v1.37.0
@@ -32,7 +32,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/gorm v1.30.0 // indirect
 )
