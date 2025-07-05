@@ -50,10 +50,21 @@ func init() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		CallerPrettyfier: func(frame *runtime.Frame) (function string, file string) {
 			fileName := frame.File
+			// 1. Remove module version string from path if present.
+			if atIndex := strings.Index(fileName, "@"); atIndex != -1 {
+				if slashIndex := strings.Index(fileName[atIndex:], "/"); slashIndex != -1 {
+					fileName = fileName[:atIndex] + fileName[atIndex+slashIndex:]
+				}
+			}
+
+			// 2. Take the last 3 path components.
 			parts := strings.Split(fileName, "/")
-			if len(parts) > 2 {
+			if len(parts) > 3 {
+				fileName = strings.Join(parts[len(parts)-3:], "/")
+			} else if len(parts) > 1 {
 				fileName = strings.Join(parts[len(parts)-2:], "/")
 			}
+
 			return frame.Function, fmt.Sprintf("%s:%d", fileName, frame.Line)
 		},
 	})
