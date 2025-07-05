@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/www-xu/spark"
+	"github.com/www-xu/spark/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -52,7 +54,9 @@ func (c *Component) Instantiate() error {
 		dsn += fmt.Sprintf(" search_path=%s", *c.config.Scheme)
 	}
 
-	c.instance, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	c.instance, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: log.NewGormLogger(),
+	})
 	if err != nil {
 		return err
 	}

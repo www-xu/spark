@@ -1,12 +1,14 @@
 package gin
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/www-xu/spark"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gin-gonic/gin"
+	"github.com/www-xu/spark"
+	"github.com/www-xu/spark/gin/middleware"
 )
 
 type Server struct {
@@ -14,10 +16,13 @@ type Server struct {
 	*gin.Engine
 }
 
-func NewServer(middleware ...gin.HandlerFunc) *Server {
+func NewServer(middlewares ...gin.HandlerFunc) *Server {
 	ginEngine := gin.New()
 	ginEngine.ContextWithFallback = true
-	ginEngine.Use(middleware...)
+
+	// Add custom logger and recovery middleware
+	ginEngine.Use(middleware.Logger(), gin.Recovery())
+	ginEngine.Use(middlewares...)
 
 	return &Server{
 		Engine: ginEngine,
