@@ -19,14 +19,14 @@ func Logger() gin.HandlerFunc {
 		propagator := otel.GetTextMapPropagator()
 		ctx := propagator.Extract(c.Request.Context(), propagation.HeaderCarrier(c.Request.Header))
 
+		// Start a new span for every request.
+		// If a trace context is extracted, it becomes the parent. Otherwise, a new trace is created.
+		ctx, span := tracer.Start(ctx, c.Request.URL.Path)
+		defer span.End()
+
 		spanCtx := trace.SpanContextFromContext(ctx)
-		var traceID, spanID string
-		if spanCtx.HasTraceID() {
-			traceID = spanCtx.TraceID().String()
-		}
-		if spanCtx.HasSpanID() {
-			spanID = spanCtx.SpanID().String()
-		}
+		traceID := spanCtx.TraceID().String()
+		spanID := spanCtx.SpanID().String()
 
 		c.Set(string(log.TraceIdKey), traceID)
 		c.Set(string(log.SpanIdKey), spanID)
