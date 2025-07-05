@@ -2,9 +2,10 @@ package spark
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"sync"
+
+	"github.com/spf13/viper"
 )
 
 type AppEnv string
@@ -29,6 +30,7 @@ type ApplicationContext struct {
 	config             *ApplicationConfig
 	initEventListeners []ApplicationInitEventListener
 	stopEventListeners []ApplicationStopEventListener
+	shutdownFuncs      []func()
 }
 
 func NewApplicationContext() *ApplicationContext {
@@ -37,6 +39,7 @@ func NewApplicationContext() *ApplicationContext {
 		config:             &ApplicationConfig{},
 		initEventListeners: []ApplicationInitEventListener{},
 		stopEventListeners: []ApplicationStopEventListener{},
+		shutdownFuncs:      []func(){},
 	}
 }
 
@@ -46,6 +49,10 @@ func RegisterApplicationInitEventListener(listener ApplicationInitEventListener)
 
 func RegisterApplicationStopEventListener(listener ApplicationStopEventListener) {
 	ctx.stopEventListeners = append(ctx.stopEventListeners, listener)
+}
+
+func RegisterShutdownFunc(f func()) {
+	ctx.shutdownFuncs = append(ctx.shutdownFuncs, f)
 }
 
 func (ctx *ApplicationContext) beforeInit() error {
@@ -103,6 +110,12 @@ func (ctx *ApplicationContext) Init() error {
 		return err
 	}
 
+	shutdown, err := InitTracer(ctx.config.serverConfig.Name)
+	if err != nil {
+		return err
+	}
+	RegisterShutdownFunc(shutdown)
+
 	ctx.initialized = true
 
 	return nil
@@ -147,6 +160,11 @@ func Close(callback func()) error {
 	}
 
 	callback()
+
+	// Call all registered shutdown functions in reverse order.
+	for i := len(ctx.shutdownFuncs) - 1; i >= 0; i-- {
+		ctx.shutdownFuncs[i]()
+	}
 
 	for _, listener := range ctx.stopEventListeners {
 		listener.AfterStop()

@@ -45,7 +45,7 @@ func Logger() gin.HandlerFunc {
 		c.Next()
 
 		latency := time.Since(start)
-		log.WithContext(c.Request.Context()).WithFields(map[string]interface{}{
+		log.WithContext(c).WithFields(map[string]interface{}{
 			"status":     c.Writer.Status(),
 			"method":     c.Request.Method,
 			"path":       c.Request.URL.Path,
