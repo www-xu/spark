@@ -79,7 +79,9 @@ func (c *Component) Close() error {
 func (c *Component) BeforeInit() error { return nil }
 
 func (c *Component) AfterInit(applicationContext *spark.ApplicationContext) error {
-	return nil
+	c.ctx = applicationContext
+
+	return c.Instantiate()
 }
 
 func GetPublisher() *amqp.Publisher {
