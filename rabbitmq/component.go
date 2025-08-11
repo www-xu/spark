@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/www-xu/spark"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-amqp/v3/pkg/amqp"
+	watermillAmqp "github.com/ThreeDotsLabs/watermill-amqp/v3/pkg/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Component struct {
 	ctx        *spark.ApplicationContext
 	config     *Config
-	amqpConfig amqp.Config
-	publisher  *amqp.Publisher
-	subscriber *amqp.Subscriber
+	amqpConfig watermillAmqp.Config
+	publisher  *watermillAmqp.Publisher
+	subscriber *watermillAmqp.Subscriber
 }
 
 func NewComponent() *Component {
@@ -40,9 +42,21 @@ func (c *Component) Instantiate() error {
 		return errors.New("rabbitmq config isn't found")
 	}
 
-	c.amqpConfig = amqp.NewDurableQueueConfig(c.config.Uri)
+	c.amqpConfig = watermillAmqp.NewDurableQueueConfig(c.config.Uri)
+	c.amqpConfig.Marshaler = watermillAmqp.DefaultMarshaler{
+		PostprocessPublishing: func(publishing amqp.Publishing) amqp.Publishing {
+			var messageID string = uuid.New().String()
+			if value, ok := publishing.Headers[watermillAmqp.DefaultMessageUUIDHeaderKey]; ok {
+				if uuid, ok := value.(string); ok {
+					messageID = uuid
+				}
+			}
+			publishing.MessageId = messageID
+			return publishing
+		},
+	}
 
-	c.publisher, err = amqp.NewPublisher(
+	c.publisher, err = watermillAmqp.NewPublisher(
 		c.amqpConfig,
 		watermill.NewStdLogger(false, false),
 	)
@@ -50,7 +64,7 @@ func (c *Component) Instantiate() error {
 		panic(err)
 	}
 
-	c.subscriber, err = amqp.NewSubscriber(
+	c.subscriber, err = watermillAmqp.NewSubscriber(
 		c.amqpConfig,
 		watermill.NewStdLogger(false, false),
 	)
@@ -61,11 +75,11 @@ func (c *Component) Instantiate() error {
 	return nil
 }
 
-func Get(ctx context.Context) *amqp.Publisher {
+func Get(ctx context.Context) *watermillAmqp.Publisher {
 	return instance.Get(ctx)
 }
 
-func (c *Component) Get(ctx context.Context) *amqp.Publisher {
+func (c *Component) Get(ctx context.Context) *watermillAmqp.Publisher {
 	return c.publisher
 }
 
@@ -84,19 +98,19 @@ func (c *Component) AfterInit(applicationContext *spark.ApplicationContext) erro
 	return c.Instantiate()
 }
 
-func GetPublisher() *amqp.Publisher {
+func GetPublisher() *watermillAmqp.Publisher {
 	return instance.publisher
 }
 
-func (c *Component) GetPublisher() *amqp.Publisher {
+func (c *Component) GetPublisher() *watermillAmqp.Publisher {
 	return c.publisher
 }
 
-func GetSubscriber() *amqp.Subscriber {
+func GetSubscriber() *watermillAmqp.Subscriber {
 	return instance.subscriber
 }
 
-func (c *Component) GetSubscriber() *amqp.Subscriber {
+func (c *Component) GetSubscriber() *watermillAmqp.Subscriber {
 	return c.subscriber
 }
 
