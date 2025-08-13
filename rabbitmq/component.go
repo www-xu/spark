@@ -64,6 +64,9 @@ func (c *Component) Instantiate() error {
 	c.amqpConfig.Exchange.GenerateName = func(topic string) string {
 		return c.config.Exchange
 	}
+	c.amqpConfig.Exchange.Type = "topic"
+	c.amqpConfig.Exchange.Durable = true
+	c.amqpConfig.Exchange.AutoDeleted = true
 
 	c.publisher, err = watermillAmqp.NewPublisher(
 		c.amqpConfig,
