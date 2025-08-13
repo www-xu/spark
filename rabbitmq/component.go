@@ -55,13 +55,14 @@ func (c *Component) Instantiate() error {
 			return publishing
 		},
 	}
-	c.amqpConfig.Publish = watermillAmqp.PublishConfig{
-		GenerateRoutingKey: func(topic string) string {
-			if routingKey, ok := c.config.Topics[topic]; ok {
-				return routingKey
-			}
-			return topic
-		},
+	c.amqpConfig.Publish.GenerateRoutingKey = func(topic string) string {
+		if routingKey, ok := c.config.Topics[topic]; ok {
+			return routingKey
+		}
+		return topic
+	}
+	c.amqpConfig.Exchange.GenerateName = func(topic string) string {
+		return c.config.Exchange
 	}
 
 	c.publisher, err = watermillAmqp.NewPublisher(
