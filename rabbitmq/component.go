@@ -66,7 +66,7 @@ func (c *Component) Instantiate() error {
 
 	c.publisher, err = watermillAmqp.NewPublisher(
 		c.amqpConfig,
-		watermill.NewStdLogger(false, false),
+		watermill.NewStdLogger(spark.Env() != spark.Prod, spark.Env() != spark.Prod),
 	)
 	if err != nil {
 		panic(err)
