@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/www-xu/spark"
 )
 
@@ -37,10 +38,12 @@ func (c *Component) Instantiate() (err error) {
 		return errors.New("alicloud_oss config isn't found")
 	}
 
-	c.instance, err = oss.New(c.config.Endpoint, c.config.AccessKeyID, c.config.AccessKeySecret)
-	if err != nil {
-		return err
-	}
+	cfg := oss.LoadDefaultConfig().
+		WithEndpoint(c.config.Endpoint).
+		WithRegion(c.config.Region).
+		WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider())
+
+	c.instance = oss.NewClient(cfg)
 
 	return nil
 }
