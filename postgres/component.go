@@ -55,7 +55,8 @@ func (c *Component) Instantiate() error {
 	}
 
 	c.instance, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: log.NewGormLogger(),
+		Logger:         log.NewGormLogger(),
+		TranslateError: true,
 	})
 	if err != nil {
 		return err
