@@ -83,6 +83,7 @@ func (c *Component) Instantiate() error {
 		amqpConfig.Exchange.Type = exchangeType
 		amqpConfig.Exchange.Durable = exchangeConfig.Durable
 		amqpConfig.Exchange.AutoDeleted = exchangeConfig.AutoDeleted
+		amqpConfig.Exchange.Arguments = exchangeConfig.Args
 
 		// 创建 publisher，watermillAmqp 会自动声明 exchange
 		publisher, err := watermillAmqp.NewPublisher(

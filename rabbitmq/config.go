@@ -1,9 +1,10 @@
 package rabbitmq
 
 type ExchangeConfig struct {
-	Type        string `mapstructure:"type"`
-	Durable     bool   `mapstructure:"durable"`
-	AutoDeleted bool   `mapstructure:"auto_deleted"`
+	Type        string         `mapstructure:"type"`
+	Durable     bool           `mapstructure:"durable"`
+	AutoDeleted bool           `mapstructure:"auto_deleted"`
+	Args        map[string]any `mapstructure:"args"` // exchange type 需要的参数
 }
 
 type Config struct {
