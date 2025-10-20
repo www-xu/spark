@@ -13,11 +13,10 @@ import (
 )
 
 type Component struct {
-	ctx        *spark.ApplicationContext
-	config     *Config
-	amqpConfig watermillAmqp.Config
-	publisher  *watermillAmqp.Publisher
-	subscriber *watermillAmqp.Subscriber
+	ctx         *spark.ApplicationContext
+	config      *Config
+	publishers  map[string]*watermillAmqp.Publisher  // exchange name -> publisher
+	subscribers map[string]*watermillAmqp.Subscriber // exchange name -> subscriber
 }
 
 func NewComponent() *Component {
@@ -42,65 +41,88 @@ func (c *Component) Instantiate() error {
 		return errors.New("rabbitmq config isn't found")
 	}
 
-	c.amqpConfig = watermillAmqp.NewDurableQueueConfig(c.config.Uri)
-	c.amqpConfig.Marshaler = watermillAmqp.DefaultMarshaler{
-		PostprocessPublishing: func(publishing amqp.Publishing) amqp.Publishing {
-			var messageID string = uuid.New().String()
-			if value, ok := publishing.Headers[watermillAmqp.DefaultMessageUUIDHeaderKey]; ok {
-				if uuid, ok := value.(string); ok {
-					messageID = uuid
+	// 初始化 publishers 和 subscribers maps
+	c.publishers = make(map[string]*watermillAmqp.Publisher)
+	c.subscribers = make(map[string]*watermillAmqp.Subscriber)
+
+	// 为每个 exchange 创建独立的 publisher 和 subscriber
+	// watermillAmqp 会在创建时自动声明 exchange
+	for exchangeName, exchangeConfig := range c.config.Exchanges {
+		// 创建针对该 exchange 的配置
+		amqpConfig := watermillAmqp.NewDurableQueueConfig(c.config.Uri)
+		amqpConfig.Marshaler = watermillAmqp.DefaultMarshaler{
+			PostprocessPublishing: func(publishing amqp.Publishing) amqp.Publishing {
+				var messageID string = uuid.New().String()
+				if value, ok := publishing.Headers[watermillAmqp.DefaultMessageUUIDHeaderKey]; ok {
+					if uuid, ok := value.(string); ok {
+						messageID = uuid
+					}
 				}
+				publishing.MessageId = messageID
+				return publishing
+			},
+		}
+
+		// 为这个 exchange 配置 routing key 生成器
+		amqpConfig.Publish.GenerateRoutingKey = func(topic string) string {
+			if routingKey, ok := c.config.RoutingKeys[topic]; ok {
+				return routingKey
 			}
-			publishing.MessageId = messageID
-			return publishing
-		},
-	}
-	c.amqpConfig.Publish.GenerateRoutingKey = func(topic string) string {
-		if routingKey, ok := c.config.Topics[topic]; ok {
-			return routingKey
+			// 如果没有配置 routing key，默认使用 topic 名称
+			return topic
 		}
-		return topic
-	}
-	c.amqpConfig.Exchange.GenerateName = func(topic string) string {
-		if exchange, ok := c.config.Exchanges[topic]; ok {
-			return exchange
+
+		// 固定返回当前 exchange 的名称
+		currentExchangeName := exchangeName
+		amqpConfig.Exchange.GenerateName = func(topic string) string {
+			return currentExchangeName
 		}
-		return c.config.DefaultExchange
-	}
-	c.amqpConfig.Exchange.Type = "topic"
-	c.amqpConfig.Exchange.Durable = true
-	c.amqpConfig.Exchange.AutoDeleted = true
 
-	c.publisher, err = watermillAmqp.NewPublisher(
-		c.amqpConfig,
-		watermill.NewStdLogger(spark.Env() != spark.Prod, spark.Env() != spark.Prod),
-	)
-	if err != nil {
-		panic(err)
-	}
+		// 设置 exchange 配置
+		exchangeType := exchangeConfig.Type
+		amqpConfig.Exchange.Type = exchangeType
+		amqpConfig.Exchange.Durable = exchangeConfig.Durable
+		amqpConfig.Exchange.AutoDeleted = exchangeConfig.AutoDeleted
 
-	c.subscriber, err = watermillAmqp.NewSubscriber(
-		c.amqpConfig,
-		watermill.NewStdLogger(false, false),
-	)
-	if err != nil {
-		panic(err)
+		// 创建 publisher，watermillAmqp 会自动声明 exchange
+		publisher, err := watermillAmqp.NewPublisher(
+			amqpConfig,
+			watermill.NewStdLogger(spark.Env() != spark.Prod, spark.Env() != spark.Prod),
+		)
+		if err != nil {
+			return err
+		}
+		c.publishers[exchangeName] = publisher
+
+		// 创建 subscriber，watermillAmqp 会自动声明 exchange
+		subscriber, err := watermillAmqp.NewSubscriber(
+			amqpConfig,
+			watermill.NewStdLogger(false, false),
+		)
+		if err != nil {
+			return err
+		}
+		c.subscribers[exchangeName] = subscriber
 	}
 
 	return nil
 }
 
-func Get(ctx context.Context) *watermillAmqp.Publisher {
-	return instance.Get(ctx)
+func Get(ctx context.Context, exchangeName string) (*watermillAmqp.Publisher, error) {
+	return instance.Get(ctx, exchangeName)
 }
 
-func (c *Component) Get(ctx context.Context) *watermillAmqp.Publisher {
-	return c.publisher
+func (c *Component) Get(ctx context.Context, exchangeName string) (*watermillAmqp.Publisher, error) {
+	return c.GetPublisher(exchangeName)
 }
 
 func (c *Component) Close() error {
-	_ = c.subscriber.Close()
-	_ = c.publisher.Close()
+	for _, subscriber := range c.subscribers {
+		_ = subscriber.Close()
+	}
+	for _, publisher := range c.publishers {
+		_ = publisher.Close()
+	}
 
 	return nil
 }
@@ -113,20 +135,30 @@ func (c *Component) AfterInit(applicationContext *spark.ApplicationContext) erro
 	return c.Instantiate()
 }
 
-func GetPublisher() *watermillAmqp.Publisher {
-	return instance.publisher
+func GetPublisher(exchangeName string) (*watermillAmqp.Publisher, error) {
+	return instance.GetPublisher(exchangeName)
 }
 
-func (c *Component) GetPublisher() *watermillAmqp.Publisher {
-	return c.publisher
+func (c *Component) GetPublisher(exchangeName string) (*watermillAmqp.Publisher, error) {
+	publisher, ok := c.publishers[exchangeName]
+	if !ok {
+		return nil, errors.New("publisher not found for exchange: " + exchangeName)
+	}
+
+	return publisher, nil
 }
 
-func GetSubscriber() *watermillAmqp.Subscriber {
-	return instance.subscriber
+func GetSubscriber(exchangeName string) (*watermillAmqp.Subscriber, error) {
+	return instance.GetSubscriber(exchangeName)
 }
 
-func (c *Component) GetSubscriber() *watermillAmqp.Subscriber {
-	return c.subscriber
+func (c *Component) GetSubscriber(exchangeName string) (*watermillAmqp.Subscriber, error) {
+	subscriber, ok := c.subscribers[exchangeName]
+	if !ok {
+		return nil, errors.New("subscriber not found for exchange: " + exchangeName)
+	}
+
+	return subscriber, nil
 }
 
 func (c *Component) BeforeStop() {}
