@@ -62,7 +62,10 @@ func (c *Component) Instantiate() error {
 		return topic
 	}
 	c.amqpConfig.Exchange.GenerateName = func(topic string) string {
-		return c.config.Exchange
+		if exchange, ok := c.config.Exchanges[topic]; ok {
+			return exchange
+		}
+		return c.config.DefaultExchange
 	}
 	c.amqpConfig.Exchange.Type = "topic"
 	c.amqpConfig.Exchange.Durable = true
