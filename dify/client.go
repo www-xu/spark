@@ -36,7 +36,7 @@ func (c *Client) InvokeWorkflow(ctx context.Context, workflowId, userID string, 
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.host, "/v1/workflows/run"), bytes.NewReader(requestBytes))
